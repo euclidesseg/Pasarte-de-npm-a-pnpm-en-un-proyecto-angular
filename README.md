@@ -1,4 +1,4 @@
-# Migrar un proyecto Angular 21 de npm a pnpm
+# Cómo Migrar un proyecto Angular +20 de npm a pnpm
 
 Guía completa para migrar un proyecto de Angular desde npm hacia pnpm de forma segura y moderna.
 
