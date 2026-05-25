@@ -1,10 +1,19 @@
+# Cómo Migrar un proyecto Angular +20 de npm a pnpm
 
+Guía completa para:
 
-# Instalar pnpm y usarlo por defecto en todo el sistema
+- instalar pnpm
+- usar pnpm por defecto
+- configurar Angular para pnpm
+- migrar proyectos Angular existentes
+- bloquear npm
+- mejorar seguridad con approve-builds
+
+---
+
+# Requisitos previos
 
 ## Verificar Node.js
-
-Antes de instalar pnpm, verifica que Node.js esté instalado correctamente:
 
 ```bash
 node -v
@@ -13,11 +22,9 @@ npm -v
 
 ---
 
-# Instalar pnpm globalmente
+# Instalar pnpm
 
 ## Método recomendado (Corepack)
-
-Node.js moderno incluye Corepack, que permite administrar gestores de paquetes como pnpm de forma oficial.
 
 Habilitar Corepack:
 
@@ -31,7 +38,7 @@ Activar pnpm:
 corepack prepare pnpm@latest --activate
 ```
 
-Verificar instalación:
+Verificar:
 
 ```bash
 pnpm -v
@@ -41,29 +48,21 @@ pnpm -v
 
 # Método alternativo usando npm
 
-También puedes instalar pnpm globalmente usando npm:
-
 ```bash
 npm install -g pnpm
 ```
 
-Verificar:
-
-```bash
-pnpm -v
-```
-
 ---
 
-# Solución para Windows: ERR_PNPM_NO_GLOBAL_BIN_DIR
+# Solución para Windows
 
-Si aparece un error similar a:
+Si aparece:
 
 ```text
 ERR_PNPM_NO_GLOBAL_BIN_DIR
 ```
 
-Ejecuta:
+Ejecutar:
 
 ```bash
 pnpm setup
@@ -71,9 +70,9 @@ pnpm setup
 
 Después:
 
-1. Cierra completamente la terminal.
-2. Abre nuevamente CMD, PowerShell o VSCode.
-3. Verifica:
+1. Cerrar terminal
+2. Abrir nuevamente
+3. Verificar:
 
 ```bash
 pnpm -v
@@ -81,17 +80,33 @@ pnpm -v
 
 ---
 
-# Configurar pnpm como gestor por defecto en Angular
+# Instalar Angular CLI
+
+## Globalmente
+
+```bash
+pnpm add -g @angular/cli
+```
+
+Verificar:
+
+```bash
+ng version
+```
+
+---
+
+# Configurar Angular para usar pnpm por defecto
 
 Angular usa npm por defecto si no se configura manualmente.
 
-Configurar Angular CLI globalmente:
+Configurar:
 
 ```bash
 ng config -g cli.packageManager pnpm
 ```
 
-Verificar configuración:
+Verificar:
 
 ```bash
 ng config -g cli.packageManager
@@ -103,45 +118,206 @@ Resultado esperado:
 pnpm
 ```
 
-Con esto:
+Ahora todos los nuevos proyectos:
 
 ```bash
 ng new mi-app
 ```
 
-creará automáticamente proyectos usando:
+usarán automáticamente:
 
 - pnpm
 - `pnpm-lock.yaml`
-- SIN `package-lock.json`
+- NO crearán `package-lock.json`
 
 ---
 
-# Configurar proyectos Node.js para usar pnpm
-
-En cada proyecto se recomienda definir:
-
-```json
-"packageManager": "pnpm@10.15.1"
-```
-
-Puedes usar tu versión real:
+# Crear un nuevo proyecto Angular con pnpm
 
 ```bash
-pnpm -v
+ng new mi-app
 ```
 
-Ejemplo:
+Entrar al proyecto:
+
+```bash
+cd mi-app
+```
+
+---
+
+# Migrar un proyecto Angular existente de npm a pnpm
+
+Si el proyecto fue creado antes de configurar Angular para pnpm, debes migrarlo manualmente.
+
+---
+
+## 1. Cambiar packageManager en package.json
+
+Buscar:
+
+```json
+"packageManager": "npm@10.x.x"
+```
+
+Cambiar por:
 
 ```json
 "packageManager": "pnpm@11.3.0"
 ```
 
-Esto permite que Corepack y otras herramientas detecten automáticamente que el proyecto usa pnpm.
+Usa tu versión real:
+
+```bash
+pnpm -v
+```
 
 ---
 
-# Comandos equivalentes npm → pnpm
+## 2. Eliminar node_modules y package-lock.json
+
+### PowerShell
+
+```powershell
+Remove-Item -Recurse -Force node_modules
+Remove-Item package-lock.json
+```
+
+### CMD
+
+```cmd
+rmdir /s /q node_modules
+del package-lock.json
+```
+
+---
+
+## 3. Configurar scripts seguros
+
+```bash
+pnpm config set ignore-scripts false --location=project
+```
+
+---
+
+## 4. Instalar dependencias con pnpm
+
+```bash
+pnpm install
+```
+
+Esto creará:
+
+```text
+pnpm-lock.yaml
+```
+
+---
+
+# approve-builds y seguridad
+
+Después de instalar dependencias es normal ver:
+
+```text
+Ignored build scripts:
+esbuild
+@parcel/watcher
+```
+
+pnpm bloquea scripts sensibles automáticamente.
+
+---
+
+## Aprobar scripts necesarios
+
+```bash
+pnpm approve-builds
+```
+
+Normalmente Angular usa:
+
+- esbuild
+- @parcel/watcher
+- lmdb
+- msgpackr-extract
+
+---
+
+## Aplicar scripts aprobados
+
+```bash
+pnpm rebuild
+```
+
+---
+
+# Configuración generada
+
+pnpm puede generar:
+
+```yaml
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
+
+ignoreScripts: false
+```
+
+---
+
+# Explicación de ignoreScripts
+
+## ignoreScripts: false
+
+NO significa:
+
+> ejecutar todo automáticamente
+
+Significa:
+
+> scripts permitidos, pero protegidos por approve-builds
+
+---
+
+## ignoreScripts: true
+
+Bloquea:
+
+- scripts de dependencias
+- scripts lifecycle
+- builds
+
+Angular normalmente fallará.
+
+---
+
+# Ejecutar Angular
+
+```bash
+pnpm ng serve -o
+```
+
+o:
+
+```bash
+pnpm exec ng serve -o
+```
+
+---
+
+# Configurar pnpm en proyectos Node.js
+
+Agregar en package.json:
+
+```json
+"packageManager": "pnpm@11.3.0"
+```
+
+---
+
+# Equivalencias npm → pnpm
 
 | npm | pnpm |
 |---|---|
@@ -149,26 +325,19 @@ Esto permite que Corepack y otras herramientas detecten automáticamente que el 
 | npm run dev | pnpm dev |
 | npm run build | pnpm build |
 | npm start | pnpm start |
-| npm create vite | pnpm create vite |
 | npx | pnpm dlx |
 
 ---
 
 # Usar pnpm por defecto en PowerShell
 
-## Redirigir npm automáticamente hacia pnpm
-
-PowerShell permite sobrescribir el comando `npm` para usar pnpm automáticamente.
-
-Abrir PowerShell y ejecutar:
+Abrir:
 
 ```powershell
 notepad $PROFILE
 ```
 
-Si el archivo no existe, PowerShell preguntará si deseas crearlo.
-
-Agregar al archivo:
+Agregar:
 
 ```powershell
 function npm {
@@ -176,21 +345,21 @@ function npm {
 }
 ```
 
-Guardar el archivo.
+Guardar.
 
-Luego recargar el perfil:
+Recargar perfil:
 
 ```powershell
 . $PROFILE
 ```
 
-Ahora, cuando ejecutes:
+Ahora:
 
 ```bash
 npm install
 ```
 
-PowerShell realmente ejecutará:
+ejecutará realmente:
 
 ```bash
 pnpm install
@@ -198,9 +367,7 @@ pnpm install
 
 ---
 
-# Bloquear completamente npm en PowerShell
-
-Si prefieres impedir el uso de npm:
+# Bloquear completamente npm
 
 Abrir nuevamente:
 
@@ -216,31 +383,17 @@ function npm {
 }
 ```
 
-Guardar y recargar:
+Recargar:
 
 ```powershell
 . $PROFILE
-```
-
-Ahora cualquier intento de usar npm mostrará:
-
-```text
-❌ npm está bloqueado. Usa pnpm.
 ```
 
 ---
 
-# Verificar si PowerShell está activo
+# Verificar PowerShell
 
-El comando:
-
-```powershell
-. $PROFILE
-```
-
-SOLO funciona en PowerShell.
-
-Debes ver algo similar a:
+Debe verse:
 
 ```text
 PS C:\Users\TuUsuario>
@@ -252,27 +405,13 @@ Si ves:
 C:\Users\TuUsuario>
 ```
 
-entonces estás usando CMD y no PowerShell.
+estás usando CMD.
 
 ---
 
-# Configuración recomendada moderna
+# Seguridad adicional: permitir solo pnpm
 
-La configuración recomendada actualmente para proyectos modernos es:
-
-- Node.js
-- Corepack
-- pnpm
-- `packageManager`
-- `pnpm-lock.yaml`
-- `only-allow pnpm` (opcional)
-- bloqueo o redirección de npm en PowerShell
-
----
-
-# Seguridad adicional: permitir solo pnpm en proyectos
-
-Puedes impedir que un proyecto use npm agregando:
+En package.json:
 
 ```json
 "scripts": {
@@ -280,19 +419,37 @@ Puedes impedir que un proyecto use npm agregando:
 }
 ```
 
-Instalar dependencia:
+Instalar:
 
 ```bash
 pnpm add -D only-allow
 ```
 
-Ahora, si alguien ejecuta:
+Ahora:
 
 ```bash
 npm install
 ```
 
-el proyecto fallará y exigirá pnpm.
+fallará automáticamente.
+
+---
+
+# Qué subir a GitHub
+
+## Sí subir
+
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- .npmrc
+
+---
+
+## NO subir
+
+```text
+node_modules
+```
 
 ---
 
@@ -300,11 +457,11 @@ el proyecto fallará y exigirá pnpm.
 
 Con esta configuración obtienes:
 
-- pnpm configurado globalmente.
-- Angular usando pnpm por defecto.
-- Node.js compatible con pnpm.
-- npm redirigido o bloqueado.
-- Instalaciones más rápidas.
-- Menor consumo de disco.
-- Mayor seguridad frente a scripts maliciosos.
-- Configuración consistente para equipos y CI/CD.
+- Angular funcionando con pnpm
+- pnpm como gestor por defecto
+- npm bloqueado o redirigido
+- instalaciones más rápidas
+- menor uso de disco
+- mayor seguridad
+- control granular de scripts
+- configuración moderna para equipos y CI/CD
