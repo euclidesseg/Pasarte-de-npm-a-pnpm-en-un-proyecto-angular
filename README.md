@@ -1,4 +1,4 @@
----
+
 
 # Instalar pnpm y usarlo por defecto en todo el sistema
 
