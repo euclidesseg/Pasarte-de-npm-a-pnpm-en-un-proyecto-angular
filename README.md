@@ -1,13 +1,14 @@
-# Cómo Migrar un proyecto Angular +20 de npm a pnpm
+# Cómo Migrar un Proyecto Angular +20 de npm a pnpm
 
 Guía completa para:
 
-- instalar pnpm
-- usar pnpm por defecto
-- configurar Angular para pnpm
-- migrar proyectos Angular existentes
-- bloquear npm
-- mejorar seguridad con approve-builds
+* Instalar pnpm
+* Usar pnpm por defecto
+* Configurar Angular para pnpm
+* Migrar proyectos Angular existentes
+* Bloquear npm
+* Mejorar seguridad con approve-builds
+* Solucionar problemas comunes con `$PROFILE` en PowerShell
 
 ---
 
@@ -46,7 +47,7 @@ pnpm -v
 
 ---
 
-# Método alternativo usando npm
+## Método alternativo usando npm
 
 ```bash
 npm install -g pnpm
@@ -70,8 +71,8 @@ pnpm setup
 
 Después:
 
-1. Cerrar terminal
-2. Abrir nuevamente
+1. Cerrar la terminal.
+2. Abrir nuevamente la terminal.
 3. Verificar:
 
 ```bash
@@ -126,9 +127,9 @@ ng new mi-app
 
 usarán automáticamente:
 
-- pnpm
-- `pnpm-lock.yaml`
-- NO crearán `package-lock.json`
+* pnpm
+* `pnpm-lock.yaml`
+* NO crearán `package-lock.json`
 
 ---
 
@@ -236,10 +237,10 @@ pnpm approve-builds
 
 Normalmente Angular usa:
 
-- esbuild
-- @parcel/watcher
-- lmdb
-- msgpackr-extract
+* esbuild
+* @parcel/watcher
+* lmdb
+* msgpackr-extract
 
 ---
 
@@ -285,9 +286,9 @@ Significa:
 
 Bloquea:
 
-- scripts de dependencias
-- scripts lifecycle
-- builds
+* scripts de dependencias
+* scripts lifecycle
+* builds
 
 Angular normalmente fallará.
 
@@ -319,19 +320,104 @@ Agregar en package.json:
 
 # Equivalencias npm → pnpm
 
-| npm | pnpm |
-|---|---|
-| npm install | pnpm install |
-| npm run dev | pnpm dev |
-| npm run build | pnpm build |
-| npm start | pnpm start |
-| npx | pnpm dlx |
+| npm           | pnpm         |
+| ------------- | ------------ |
+| npm install   | pnpm install |
+| npm run dev   | pnpm dev     |
+| npm run build | pnpm build   |
+| npm start     | pnpm start   |
+| npx           | pnpm dlx     |
 
 ---
 
 # Usar pnpm por defecto en PowerShell
 
-Abrir:
+## Verificar que estás usando PowerShell
+
+Debes ver algo similar a:
+
+```text
+PS C:\Users\TuUsuario>
+```
+
+Si ves:
+
+```text
+C:\Users\TuUsuario>
+```
+
+estás usando CMD (Símbolo del sistema).
+
+Los comandos `$PROFILE`, `Test-Path` y `. "$PROFILE"` solamente funcionan en PowerShell.
+
+---
+
+## Verificar la ruta del perfil
+
+Mostrar la ubicación esperada:
+
+```powershell
+$PROFILE
+```
+
+Ejemplo:
+
+```text
+C:\Users\TuUsuario\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+```
+
+---
+
+## Verificar si el archivo existe
+
+```powershell
+Test-Path $PROFILE
+```
+
+Resultado:
+
+```text
+True
+```
+
+El archivo existe.
+
+o
+
+```text
+False
+```
+
+El archivo aún no existe.
+
+---
+
+## Crear el archivo de perfil
+
+Si `Test-Path $PROFILE` devuelve `False`:
+
+```powershell
+New-Item -ItemType File -Path $PROFILE -Force
+```
+
+Si la carpeta tampoco existe:
+
+```powershell
+New-Item -ItemType Directory -Path (Split-Path $PROFILE) -Force
+New-Item -ItemType File -Path $PROFILE -Force
+```
+
+---
+
+## Verificar que el archivo fue creado
+
+```powershell
+Get-Item $PROFILE
+```
+
+---
+
+## Abrir el perfil
 
 ```powershell
 notepad $PROFILE
@@ -345,12 +431,80 @@ function npm {
 }
 ```
 
-Guardar.
+Guardar y cerrar.
 
-Recargar perfil:
+---
+
+## Problemas con la política de ejecución
+
+Si aparece un error similar a:
+
+```text
+running scripts is disabled on this system
+```
+
+Consultar:
 
 ```powershell
-. $PROFILE
+Get-ExecutionPolicy
+```
+
+Si devuelve:
+
+```text
+Restricted
+```
+
+Permitir scripts del usuario actual:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+Confirmar con:
+
+```text
+Y
+```
+
+---
+
+## Recargar el perfil
+
+Usar:
+
+```powershell
+. "$PROFILE"
+```
+
+También puedes cerrar y abrir nuevamente PowerShell.
+
+---
+
+## Verificar que la función fue cargada
+
+```powershell
+Get-Command npm
+```
+
+Resultado esperado:
+
+```text
+CommandType Name
+----------- ----
+Function    npm
+```
+
+Ver implementación:
+
+```powershell
+Get-Command npm | Select-Object -ExpandProperty Definition
+```
+
+Resultado esperado:
+
+```text
+pnpm @args
 ```
 
 Ahora:
@@ -386,7 +540,7 @@ function npm {
 Recargar:
 
 ```powershell
-. $PROFILE
+. "$PROFILE"
 ```
 
 ---
@@ -439,9 +593,9 @@ fallará automáticamente.
 
 ## Sí subir
 
-- pnpm-lock.yaml
-- pnpm-workspace.yaml
-- .npmrc
+* pnpm-lock.yaml
+* pnpm-workspace.yaml
+* .npmrc
 
 ---
 
@@ -457,11 +611,12 @@ node_modules
 
 Con esta configuración obtienes:
 
-- Angular funcionando con pnpm
-- pnpm como gestor por defecto
-- npm bloqueado o redirigido
-- instalaciones más rápidas
-- menor uso de disco
-- mayor seguridad
-- control granular de scripts
-- configuración moderna para equipos y CI/CD
+* Angular funcionando con pnpm.
+* pnpm como gestor por defecto.
+* npm bloqueado o redirigido.
+* Instalaciones más rápidas.
+* Menor uso de disco.
+* Mayor seguridad.
+* Control granular de scripts.
+* Configuración moderna para equipos y CI/CD.
+* Solución para equipos donde `$PROFILE` no existe inicialmente.
